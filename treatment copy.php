@@ -26,15 +26,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
     $appointmentId = $_POST['appointmentId'];
     $treatmentType = $_POST['treatmentType'];
 
+    $treatmentStrategy = null;
+
+    switch ($treatmentType) {
+        case 'cleaning':
+            $treatmentStrategy = new CleaningTreatment();
+            break;
+        case 'whitening':
+            $treatmentStrategy = new WhiteningTreatment();
+            break;
+        case 'filling':
+            $treatmentStrategy = new FillingTreatment();
+            break;
+        case 'Nerve Filling':
+            $treatmentStrategy = new NerveFillingTreatment();
+            break;
+        case 'Root Canal Therapy':
+            $treatmentStrategy = new RootCanalTherapyTreatment();
+            break;
+        default:
+            throw new Exception("Unknown treatment type: $treatmentType");
+    }
+
+    $treatment = new Treatment($treatmentStrategy);
+
     // Create a Treatment instance and store it in the session
-    $treatment = new Treatment($appointmentId, $treatmentType, Treatment::getTreatmentFee($treatmentType), null);
+    // $treatment = new Treatment($appointmentId, $treatmentType, Treatment::getTreatmentFee($treatmentType), null);
     
     $treatments = isset($_SESSION['treatment']) ? $_SESSION['treatment'] : [];
     // $treatments[] = $treatment;
     $treatments[] = [
         'appointmentId' => $appointmentId,
         'treatmentType' => $treatmentType,
-        'fee' => Treatment::getTreatmentFee($treatmentType),
+        'fee' => $treatment->getTreatmentFee(),
+        // 'fee' => Treatment::getTreatmentFee($treatmentType),
         'paymentId' => null,
     ];
     $_SESSION['treatment'] = $treatments;
@@ -46,6 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
 ?>
 
 <!DOCTYPE html>
+<html>
+<head>
+    <title>Treatment Selection</title>
+    <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -117,31 +146,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
         }
     </style>
 </head>
-
 <body>
-    <h1>Dental Wellness Treatment Options</h1>
-    
+    <h1>Treatment Selection</h1>
+   
     <form method="post">
-        <label for="patientName">Patient Name:</label>
-        <input type="text" id="patientName" name="patientName" value="<?= $appointmentDetails['name'] ?>" readonly>
-
-        <label for="appointmentId">Appointment ID:</label>
-        <input type="text" id="appointmentId" name="appointmentId" value="<?= $appointmentDetails['id'] ?>" readonly>
+        <label>Patient Name: <?= $appointmentDetails['name'] ?></label><br>
+        <label>Appointment ID: <?= $appointmentDetails['id'] ?></label><br>
 
         <label for="treatmentType">Select Treatment Type:</label>
         <select id="treatmentType" name="treatmentType" required>
             <option value="cleaning">Cleaning</option>
             <option value="whitening">Whitening</option>
-            <option value="filling">Filling</option>
-            <option value="nerveFilling">Nerve Filling</option>
-            <option value="rootCanalTherapy">Root Canal Therapy</option>
+            <option value="filling">filling</option>
+            <option value="Nerve Filling">Nerve Filling</option>
+            <option value="Root Canal Therapy">Root Canal Therapy</option>
             <!-- Add more options as needed -->
-        </select>
+        </select><br>
+
+        <!-- <label for="fee">Treatment Fee:</label>
+        <input type="text" id="fee" name="fee" value="" readonly><br> -->
+
+        <input type="hidden" name="appointmentId" value="<?= $appointmentDetails['id'] ?>">
 
         <button type="submit" name="submit">Submit</button>
     </form>
 </body>
-
 </html>
-
-
